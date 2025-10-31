@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ani.GOJO - Premium Anime Streaming</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  /* --- THEME & LAYOUT --- */
+  body { 
+    background-color: #141414; 
+    color: #e5e5e5; 
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+  }
+  
+  .row-container:hover .scroll-arrow { opacity: 1; }
+  .scroll-arrow { 
+    opacity: 0; 
+    transition: opacity 0.3s; 
+    background-color: rgba(20, 20, 20, 0.8); 
+  }
+  .card-container { 
+    display: flex; 
+    overflow-x: auto; 
+    scrollbar-width: none; 
+    -ms-overflow-style: none; 
+    scroll-behavior: smooth; 
+  }
+  .card-container::-webkit-scrollbar { display: none; }
+  .card { 
+    flex: 0 0 16.666%; 
+    transition: transform 0.3s ease, z-index 0.3s ease; 
+    position: relative;
+  }
+  .card:hover { 
+    transform: scale(1.15); 
+    z-index: 10;
+  }
+  @media (max-width: 1024px) { .card { flex-basis: 20%; } }
+  @media (max-width: 768px) { .card { flex-basis: 25%; } }
+  @media (max-width: 640px) { .card { flex-basis: 33.333%; } }
+
+  /* --- HERO CAROUSEL --- */
+  #heroSection:hover .hero-nav-arrow { opacity: 1; }
+  .hero-nav-arrow { 
+    opacity: 0; 
+    transition: opacity 0.3s ease; 
+  }
+  .hero-slide { 
+    position: absolute; 
+    inset: 0; 
+    opacity: 0; 
+    transition: opacity 1s ease-in-out; 
+    visibility: hidden; 
+  }
+  .hero-slide.active { opacity: 1; visibility: visible; }
+  .hero-gradient { 
+    background: linear-gradient(to right, rgba(20,20,20,1) 10%, rgba(20,20,20,0.7) 50%, rgba(20,20,20,0) 100%); 
+  }
+  .hero-dots button { 
+    width: 0.75rem; 
+    height: 0.75rem; 
+    border-radius: 50%; 
+    background-color: rgba(255, 255, 255, 0.5); 
+    transition: all 0.3s ease;
+  }
+  .hero-dots button.active { 
+    background-color: white; 
+    width: 1.75rem;
+    border-radius: 0.375rem;
+  }
+
+  /* --- TRAILER STYLING --- */
+  .trailer-container {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background-color: #000;
+      border-radius: 0.5rem 0.5rem 0 0;
+  }
+  .trailer-container iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+  }
+
+  /* --- MODAL, SPINNER, & BUTTONS --- */
+  .modal { 
+    background: rgba(0,0,0,0.7); 
+    backdrop-filter: blur(8px); 
+    transition: opacity 0.3s ease, visibility 0.3s ease; 
+    opacity: 0; 
+    visibility: hidden; 
+  }
+  .modal.active { opacity: 1; visibility: visible; }
+  .modal-content-wrapper { 
+    transition: transform 0.3s ease; 
+    transform: scale(0.95); 
+  }
+  .modal.active .modal-content-wrapper { transform: scale(1); }
+  .spinner { 
+    border: 4px solid rgba(255,255,255,0.3); 
+    border-top: 4px solid #e50914; 
+    border-radius: 50%; 
+    width: 32px; 
+    height: 32px; 
+    animation: spin 1s linear infinite; 
+  }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+  body.modal-open { overflow: hidden; }
+  .btn-pagination { 
+    padding: 0.5rem 1rem; 
+    border-radius: 0.375rem; 
+    background-color: #4a4a4a; 
+    color: white; 
+    font-weight: 600; 
+    transition: background-color 0.2s; 
+  }
+  .btn-pagination:hover:not(:disabled) { background-color: #6b6b6b; }
+  .btn-pagination:disabled { opacity: 0.5; cursor: not-allowed; }
+  
+  /* Watchlist indicator */
+  .watchlist-indicator {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #e50914;
+    z-index: 5;
+  }
+
+  /* Filter Panel */
+  .filter-panel {
+    background: rgba(30, 30, 30, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #404040;
+    transition: all 0.3s ease;
+  }
+
+  .filter-tag {
+    background: #e50914;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.25rem;
+  }
+
+  .filter-tag button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 0.25rem;
+  }
+
+  /* View Settings */
+  .view-settings {
+    background: rgba(30, 30, 30, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #404040;
+  }
+
+  .view-option {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid #404040;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .view-option:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .view-option.active {
+    background: #e50914;
+    border-color: #e50914;
+  }
+
+  /* Grid Layouts */
+  .grid-compact {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .grid-normal {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .grid-large {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .grid-comfortable {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+
+  @media (max-width: 640px) {
+    .grid-compact {
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+    .grid-normal {
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+    .grid-large {
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+    .grid-comfortable {
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    }
+  }
+</style>
+</head>
+<body class="min-h-screen">
+
+<header class="p-4 sm:p-6 fixed top-0 left-0 right-0 z-40 bg-gradient-to-b from-black to-transparent">
+    <div class="max-w-7xl mx-auto flex justify-between items-center flex-wrap gap-4">
+        <div class="flex items-center gap-6">
+            <a href="#" onclick="goHome(); return false;" class="text-3xl font-bold text-red-600 tracking-wider uppercase">Ani.GOJO</a>
+            <button id="watchlistBtn" class="text-gray-300 hover:text-white font-semibold hidden sm:block">My Watchlist</button>
+        </div>
+        <div class="flex flex-wrap gap-2 items-center">
+            <input id="searchInput" placeholder="Search anime..." class="p-2 rounded bg-black/70 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-red-600 w-full sm:w-64" />
+            <button id="searchBtn" class="px-4 py-2 rounded bg-red-600 text-white font-semibold">Search</button>
+            <button id="exploreBtn" class="px-4 py-2 rounded bg-blue-600 text-white font-semibold hidden sm:block">Explore</button>
+        </div>
+    </div>
+</header>
+
+<main class="pt-20">
+    <section id="heroSection" class="relative h-[56.25vw] max-h-[80vh] w-full mb-8">
+        <div id="heroSlidesContainer"></div>
+        <button id="heroPrev" class="hero-nav-arrow absolute top-1/2 -translate-y-1/2 left-4 z-20 text-4xl text-white p-2 rounded-full w-12 h-12 flex items-center justify-center bg-black/50">&lt;</button>
+        <button id="heroNext" class="hero-nav-arrow absolute top-1/2 -translate-y-1/2 right-4 z-20 text-4xl text-white p-2 rounded-full w-12 h-12 flex items-center justify-center bg-black/50">&gt;</button>
+        <div id="heroDotsContainer" class="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex space-x-2 hero-dots"></div>
+    </section>
+
+    <div id="mainContent" class="max-w-7xl mx-auto space-y-8 sm:space-y-12 px-4 sm:px-6">
+        <div id="rowsContainer"></div>
+        
+        <!-- View Settings Panel - Shows in search results and explore -->
+        <div id="viewSettings" class="view-settings hidden">
+            <h3 class="font-semibold text-lg mb-3">View Settings</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="view-option active" data-view="compact">
+                    <div class="text-center">
+                        <i class="fas fa-th text-sm mb-1"></i>
+                        <div class="text-xs">Compact</div>
+                    </div>
+                </div>
+                <div class="view-option" data-view="normal">
+                    <div class="text-center">
+                        <i class="fas fa-th-large text-sm mb-1"></i>
+                        <div class="text-xs">Normal</div>
+                    </div>
+                </div>
+                <div class="view-option" data-view="comfortable">
+                    <div class="text-center">
+                        <i class="fas fa-th-large text-lg mb-1"></i>
+                        <div class="text-xs">Comfortable</div>
+                    </div>
+                </div>
+                <div class="view-option" data-view="large">
+                    <div class="text-center">
+                        <i class="fas fa-square text-lg mb-1"></i>
+                        <div class="text-xs">Large</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="searchResultsSection" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="resultsTitle" class="text-2xl font-semibold">🔎 Search Results</h2>
+                <button onclick="goHome()" class="text-sm px-3 py-1 rounded bg-gray-700 hover:bg-gray-600">← Back</button>
+            </div>
+            
+            <!-- Filter Panel - Only shows after search -->
+            <div id="filterPanel" class="filter-panel">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-lg mb-2">Filter Results</h3>
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <select id="sortFilter" class="p-2 rounded bg-black/70 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-red-600 text-sm">
+                                <option value="POPULARITY_DESC">Most Popular</option>
+                                <option value="TRENDING_DESC">Trending</option>
+                                <option value="SCORE_DESC">Highest Rated</option>
+                                <option value="START_DATE_DESC">Latest Releases</option>
+                                <option value="FAVOURITES_DESC">Most Favorited</option>
+                            </select>
+                            <select id="typeFilter" class="p-2 rounded bg-black/70 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-red-600 text-sm">
+                                <option value="">All Types</option>
+                                <option value="TV">TV Show</option>
+                                <option value="MOVIE">Movie</option>
+                                <option value="OVA">OVA</option>
+                                <option value="ONA">ONA</option>
+                                <option value="SPECIAL">Special</option>
+                            </select>
+                            <select id="seasonFilter" class="p-2 rounded bg-black/70 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-red-600 text-sm">
+                                <option value="">All Seasons</option>
+                            </select>
+                            <select id="yearFilter" class="p-2 rounded bg-black/70 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-red-600 text-sm">
+                                <option value="">All Years</option>
+                            </select>
+                            <select id="genreFilter" class="p-2 rounded bg-black/70 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-red-600 text-sm">
+                                <option value="">All Genres</option>
+                            </select>
+                            <button onclick="applyFilters()" class="px-3 py-2 rounded bg-red-600 text-white font-semibold text-sm hover:bg-red-700">Apply Filters</button>
+                            <button onclick="clearFilters()" class="px-3 py-2 rounded bg-gray-600 text-white font-semibold text-sm hover:bg-gray-700">Clear All</button>
+                        </div>
+                    </div>
+                    <div id="activeFilters" class="flex flex-wrap gap-1"></div>
+                </div>
+            </div>
+
+            <div id="results" class="grid grid-normal gap-4"></div>
+            <div id="paginationContainer" class="flex justify-center items-center gap-4 my-8 hidden">
+                <button id="prevPageBtn" class="btn-pagination">Previous</button>
+                <span id="pageIndicator" class="font-semibold text-gray-300"></span>
+                <button id="nextPageBtn" class="btn-pagination">Next</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="text-xs text-gray-500 text-center mt-12 pb-6">Powered by AniList GraphQL API</footer>
+
+<div id="detailModal" class="fixed inset-0 flex items-center justify-center p-4 modal z-50 overflow-y-auto">
+  <div class="bg-[#181818] text-white max-w-4xl w-full rounded-lg shadow-2xl relative modal-content-wrapper">
+    <button onclick="closeDetail()" aria-label="Close details modal" class="absolute top-3 right-3 bg-black/70 rounded-full w-9 h-9 flex items-center justify-center z-10">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<template id="animeCardTemplate">
+  <div class="card p-1.5" role="button" tabindex="0">
+      <div class="relative">
+        <img class="w-full h-full object-cover rounded shadow-lg" loading="lazy" />
+        <div class="watchlist-indicator hidden">
+          <i class="fas fa-bookmark"></i>
+        </div>
+      </div>
+  </div>
+</template>
+
+<script>
+// --- CONFIG & STATE ---
+const ANILIST_URL = 'https://graphql.anilist.co';
+let heroInterval;
+let currentHeroIndex = 0;
+let heroSlidesData = [];
+let currentPage = 1;
+let hasNextPage = true;
+let isLoading = false;
+
+const ROWS_CONFIG = [
+    { title: "🔥 Trending Now", sort: "TRENDING_DESC" },
+    { title: "🏆 All-Time Popular", sort: "POPULARITY_DESC" },
+    { title: "🌟 Top Rated", sort: "SCORE_DESC" },
+    { title: "🌱 New Releases", sort: "START_DATE_DESC" }
+];
+
+const GENRES = ["Action", "Adventure", "Comedy", "Drama", "Fantasy", "Horror", "Mecha", "Music", "Mystery", "Psychological", "Romance", "Sci-Fi", "Slice of Life", "Sports", "Supernatural", "Thriller"];
+
+// --- GRAPHQL QUERIES ---
+const queries = {
+  hero: `query {
+    Page(page: 1, perPage: 7) {
+      media(type: ANIME, sort: [TRENDING_DESC, POPULARITY_DESC], isAdult: false) {
+        id
+        title {
+          romaji
+          english
+        }
+        bannerImage
+        description(asHtml: false)
+        genres
+      }
+    }
+  }`,
+  
+  row: `query ($sort: [MediaSort]) {
+    Page(page: 1, perPage: 20) {
+      media(type: ANIME, sort: $sort, isAdult: false) {
+        id
+        title {
+          romaji
+          english
+        }
+        coverImage {
+          extraLarge
+        }
+      }
+    }
+  }`,
+  
+  search: `query ($search: String, $season: MediaSeason, $seasonYear: Int, $genre: String, $format: MediaFormat, $sort: [MediaSort], $page: Int, $perPage: Int) {
+    Page(page: $page, perPage: $perPage) {
+      pageInfo {
+        hasNextPage
+      }
+      media(search: $search, season: $season, seasonYear: $seasonYear, genre: $genre, format: $format, type: ANIME, isAdult: false, sort: $sort) {
+        id
+        title {
+          romaji
+          english
+        }
+        coverImage {
+          extraLarge
+        }
+      }
+    }
+  }`,
+  
+  detail: `query ($id: Int) {
+    Media(id: $id, type: ANIME) {
+      id
+      title {
+        romaji
+        english
+      }
+      coverImage {
+        extraLarge
+      }
+      bannerImage
+      description(asHtml: true)
+      episodes
+      duration
+      format
+      status
+      source
+      season
+      seasonYear
+      averageScore
+      popularity
+      startDate {
+        year
+        month
+        day
+      }
+      studios {
+        nodes {
+          name
+        }
+      }
+      genres
+      trailer {
+        id
+        site
+      }
+    }
+  }`,
+  
+  watchlist: `query ($ids: [Int]) {
+    Page(page: 1, perPage: 50) {
+      media(id_in: $ids, type: ANIME, sort: POPULARITY_DESC) {
+        id
+        title {
+          romaji
+          english
+        }
+        coverImage {
+          extraLarge
+        }
+      }
+    }
+  }`
+};
+
+// --- DOM ELEMENTS ---
+const heroSection = document.getElementById('heroSection');
+const rowsContainer = document.getElementById('rowsContainer');
+const searchResultsSection = document.getElementById('searchResultsSection');
+const resultsTitle = document.getElementById('resultsTitle');
+const cardTemplate = document.getElementById('animeCardTemplate');
+const searchInput = document.getElementById('searchInput');
+const sortFilter = document.getElementById('sortFilter');
+const typeFilter = document.getElementById('typeFilter');
+const seasonFilter = document.getElementById('seasonFilter');
+const yearFilter = document.getElementById('yearFilter');
+const genreFilter = document.getElementById('genreFilter');
+const searchBtn = document.getElementById('searchBtn');
+const exploreBtn = document.getElementById('exploreBtn');
+const watchlistBtn = document.getElementById('watchlistBtn');
+const resultsContainer = document.getElementById('results');
+const paginationContainer = document.getElementById('paginationContainer');
+const prevPageBtn = document.getElementById('prevPageBtn');
+const nextPageBtn = document.getElementById('nextPageBtn');
+const pageIndicator = document.getElementById('pageIndicator');
+const filterPanel = document.getElementById('filterPanel');
+const activeFilters = document.getElementById('activeFilters');
+const viewSettings = document.getElementById('viewSettings');
+
+// --- "MY LIST" HELPER ---
+const MyList = {
+    _list: [],
+    init() { 
+        this._list = JSON.parse(localStorage.getItem('ani_gojo_mylist')) || []; 
+    },
+    contains(id) { return this._list.includes(id); },
+    add(id) { 
+        if (!this.contains(id)) { 
+            this._list.push(id); 
+            localStorage.setItem('ani_gojo_mylist', JSON.stringify(this._list)); 
+        } 
+    },
+    remove(id) { 
+        this._list = this._list.filter(itemId => itemId !== id); 
+        localStorage.setItem('ani_gojo_mylist', JSON.stringify(this._list)); 
+    }
+};
+
+// --- VIEW SETTINGS ---
+const ViewSettings = {
+    currentView: 'normal',
+    init() {
+        this.currentView = localStorage.getItem('ani_gojo_view_mode') || 'normal';
+        this.applyViewMode();
+        this.setupEventListeners();
+    },
+    setupEventListeners() {
+        document.querySelectorAll('.view-option').forEach(option => {
+            option.addEventListener('click', () => {
+                this.setViewMode(option.dataset.view);
+            });
+        });
+    },
+    setViewMode(mode) {
+        this.currentView = mode;
+        localStorage.setItem('ani_gojo_view_mode', mode);
+        this.applyViewMode();
+    },
+    applyViewMode() {
+        // Update active state
+        document.querySelectorAll('.view-option').forEach(option => {
+            option.classList.toggle('active', option.dataset.view === this.currentView);
+        });
+        
+        // Apply grid class
+        resultsContainer.className = 'grid gap-4';
+        resultsContainer.classList.add(`grid-${this.currentView}`);
+        
+        // Also update rows if they exist
+        document.querySelectorAll('.card-container').forEach(container => {
+            // For rows, we maintain horizontal scroll but adjust card size
+            const cards = container.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.style.flexBasis = this.getCardSize();
+            });
+        });
+    },
+    getCardSize() {
+        switch(this.currentView) {
+            case 'compact': return '14%';
+            case 'normal': return '16.666%';
+            case 'comfortable': return '20%';
+            case 'large': return '25%';
+            default: return '16.666%';
+        }
+    },
+    show() {
+        viewSettings.classList.remove('hidden');
+    },
+    hide() {
+        viewSettings.classList.add('hidden');
+    }
+};
+
+// --- FILTER FUNCTIONS ---
+function applyFilters() {
+    currentPage = 1;
+    fetchAndDisplayResults();
+    updateActiveFiltersDisplay();
+}
+
+function clearFilters() {
+    sortFilter.value = 'POPULARITY_DESC';
+    typeFilter.value = '';
+    seasonFilter.value = '';
+    yearFilter.value = '';
+    genreFilter.value = '';
+    applyFilters();
+}
+
+function removeFilter(type) {
+    switch(type) {
+        case 'sort':
+            sortFilter.value = 'POPULARITY_DESC';
+            break;
+        case 'type':
+            typeFilter.value = '';
+            break;
+        case 'season':
+            seasonFilter.value = '';
+            break;
+        case 'year':
+            yearFilter.value = '';
+            break;
+        case 'genre':
+            genreFilter.value = '';
+            break;
+    }
+    applyFilters();
+}
+
+function updateActiveFiltersDisplay() {
+    activeFilters.innerHTML = '';
+    
+    const filters = [];
+    
+    if (sortFilter.value && sortFilter.value !== 'POPULARITY_DESC') {
+        const sortText = sortFilter.options[sortFilter.selectedIndex].text;
+        filters.push({
+            type: 'sort',
+            label: `Sort: ${sortText}`,
+            value: sortFilter.value
+        });
+    }
+    
+    if (typeFilter.value) {
+        filters.push({
+            type: 'type',
+            label: `Type: ${typeFilter.options[typeFilter.selectedIndex].text}`,
+            value: typeFilter.value
+        });
+    }
+    
+    if (seasonFilter.value) {
+        filters.push({
+            type: 'season',
+            label: `Season: ${seasonFilter.options[seasonFilter.selectedIndex].text}`,
+            value: seasonFilter.value
+        });
+    }
+    
+    if (yearFilter.value) {
+        filters.push({
+            type: 'year', 
+            label: `Year: ${yearFilter.value}`,
+            value: yearFilter.value
+        });
+    }
+    
+    if (genreFilter.value) {
+        filters.push({
+            type: 'genre',
+            label: `Genre: ${genreFilter.value}`,
+            value: genreFilter.value
+        });
+    }
+    
+    filters.forEach(filter => {
+        const filterTag = document.createElement('div');
+        filterTag.className = 'filter-tag';
+        filterTag.innerHTML = `
+            ${filter.label}
+            <button onclick="removeFilter('${filter.type}')" aria-label="Remove ${filter.label}">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        `;
+        activeFilters.appendChild(filterTag);
+    });
+}
+
+// --- EXPLORE FUNCTION ---
+function showExplore() {
+    rowsContainer.style.display = "none";
+    heroSection.style.display = "none";
+    resultsTitle.textContent = '🔍 Explore Anime';
+    searchResultsSection.style.display = "block";
+    filterPanel.classList.remove("hidden");
+    viewSettings.show();
+    
+    // Set default explore filters
+    sortFilter.value = 'POPULARITY_DESC';
+    typeFilter.value = '';
+    seasonFilter.value = '';
+    yearFilter.value = '';
+    genreFilter.value = '';
+    
+    currentPage = 1;
+    fetchAndDisplayResults();
+    updateActiveFiltersDisplay();
+}
+
+// --- API & DISPLAY LOGIC ---
+
+async function fetchAndDisplayResults() {
+    if (isLoading) return;
+    isLoading = true;
+    resultsContainer.innerHTML = `<div class="spinner mx-auto my-4 col-span-full"></div>`;
+    
+    const search = searchInput.value.trim();
+    const sort = sortFilter.value;
+    const type = typeFilter.value;
+    const season = seasonFilter.value;
+    const year = yearFilter.value;
+    const genre = genreFilter.value;
+
+    const variables = { page: currentPage, perPage: 50, sort: [sort] };
+    if (search) variables.search = search;
+    if (type) variables.format = type;
+    if (season) variables.season = season;
+    if (year) variables.seasonYear = parseInt(year);
+    if (genre) variables.genre = genre;
+
+    try {
+        const res = await fetch(ANILIST_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ query: queries.search, variables })
+        });
+        const json = await res.json();
+        const page = json?.data?.Page;
+        const media = page?.media || [];
+
+        resultsContainer.innerHTML = "";
+        if (media.length === 0) {
+            resultsContainer.innerHTML = '<p class="text-gray-400 text-center col-span-full py-8">No results found. Try different filters.</p>';
+        } else {
+            media.forEach(m => resultsContainer.appendChild(createAnimeCard(m)));
+        }
+        hasNextPage = page?.pageInfo?.hasNextPage ?? false;
+        updatePaginationUI();
+    } catch (err) {
+        console.error("Search failed:", err);
+        resultsContainer.innerHTML = '<p class="text-red-500 col-span-full text-center py-8">Search failed to load. Please try again.</p>';
+    } finally {
+        isLoading = false;
+    }
+}
+
+function updatePaginationUI() {
+    if (currentPage > 1 || hasNextPage) {
+        paginationContainer.classList.remove('hidden');
+        pageIndicator.textContent = `Page ${currentPage}`;
+        prevPageBtn.disabled = currentPage === 1;
+        nextPageBtn.disabled = !hasNextPage;
+    } else {
+        paginationContainer.classList.add('hidden');
+    }
+}
+
+function handleNewSearch() {
+    currentPage = 1;
+    rowsContainer.style.display = "none";
+    heroSection.style.display = "none";
+    resultsTitle.textContent = '🔎 Search Results';
+    searchResultsSection.style.display = "block";
+    filterPanel.classList.remove("hidden");
+    viewSettings.show();
+    fetchAndDisplayResults();
+    updateActiveFiltersDisplay();
+}
+
+async function showWatchlist() {
+    rowsContainer.style.display = "none";
+    heroSection.style.display = "none";
+    resultsTitle.textContent = '❤️ My Watchlist';
+    searchResultsSection.style.display = "block";
+    filterPanel.classList.add("hidden");
+    viewSettings.hide();
+    paginationContainer.classList.add('hidden');
+    resultsContainer.innerHTML = "";
+
+    const watchlistIds = MyList._list;
+    if (watchlistIds.length === 0) {
+        resultsContainer.innerHTML = '<p class="text-gray-400 text-center col-span-full py-8">Your watchlist is empty. Add shows to see them here.</p>';
+        return;
+    }
+    
+    resultsContainer.innerHTML = `<div class="spinner mx-auto my-4 col-span-full"></div>`;
+
+    try {
+        const res = await fetch(ANILIST_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ query: queries.watchlist, variables: { ids: watchlistIds } })
+        });
+        const json = await res.json();
+        const media = json?.data?.Page?.media || [];
+        
+        resultsContainer.innerHTML = "";
+        media.forEach(m => resultsContainer.appendChild(createAnimeCard(m)));
+    } catch (err) {
+        console.error("Watchlist fetch failed:", err);
+        resultsContainer.innerHTML = '<p class="text-red-500 col-span-full text-center py-8">Failed to load your watchlist.</p>';
+    }
+}
+
+function goHome() {
+    rowsContainer.style.display = "block";
+    heroSection.style.display = "block";
+    searchResultsSection.style.display = "none";
+    viewSettings.hide();
+    searchInput.value = "";
+    activeFilters.innerHTML = "";
+}
+
+async function openDetail(id) {
+    const modal = document.getElementById('detailModal');
+    const content = document.getElementById('modalContent');
+    content.innerHTML = '<div class="flex justify-center items-center h-96"><div class="spinner"></div></div>';
+    modal.classList.add('active');
+    document.body.classList.add('modal-open');
+
+    try {
+        const res = await fetch(ANILIST_URL, {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: queries.detail, variables: { id } })
+        });
+        const json = await res.json();
+        const a = json.data.Media;
+        const modalTrailerId = (a.trailer && a.trailer.site === 'youtube') ? a.trailer.id : null;
+        const isInList = MyList.contains(a.id);
+        
+        const detailsHTML = `
+            <div class="bg-[#181818] rounded-lg">
+                ${modalTrailerId ? `
+                    <div class="trailer-container">
+                        <iframe src="https://www.youtube.com/embed/${modalTrailerId}?rel=0" frameborder="0" allow="fullscreen; encrypted-media" title="Anime Trailer"></iframe>
+                    </div>` : `
+                    <div class="relative">
+                        <img src="${a.bannerImage || a.coverImage.extraLarge}" alt="${a.title.english || a.title.romaji}" class="w-full h-48 md:h-72 object-cover rounded-t-lg"/>
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#181818] to-transparent"></div>
+                    </div>
+                `}
+                <div class="p-6">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">${a.title.english || a.title.romaji}</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="md:col-span-2">
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-gray-400 text-sm">
+                                ${a.averageScore ? `<span class="font-bold text-green-500">${a.averageScore}% Score</span>` : ''}
+                                <span>${a.startDate.year || ''}</span>
+                                <span>${a.episodes || '?'} Episodes</span>
+                                <span class="capitalize">${a.status?.replace(/_/g, ' ').toLowerCase() || '-'}</span>
+                                <span class="capitalize">${a.format?.toLowerCase() || ''}</span>
+                            </div>
+                            <div class="mt-4 prose prose-sm max-w-none text-gray-300 prose-invert">${a.description || '<i>No description.</i>'}</div>
+                             <div class="mt-6 flex items-center gap-3">
+                                <button title="${isInList ? 'Remove from My List' : 'Add to My List'}" onclick="toggleMyListItem(this, ${a.id})" class="w-11 h-11 border-2 border-gray-400/80 rounded-full flex items-center justify-center text-2xl hover:border-white">
+                                    ${isInList ? '✓' : '+'}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-sm space-y-2">
+                            <p><b class="text-gray-500">Genres:</b> ${(a.genres||[]).join(', ')}</p>
+                            <p><b class="text-gray-500">Studio:</b> ${(a.studios.nodes||[]).map(s=>s.name).join(', ') || 'N/A'}</p>
+                            <p><b class="text-gray-500">Season:</b> <span class="capitalize">${a.season?.toLowerCase() || '-'}</span> ${a.seasonYear || ''}</p>
+                            <p><b class="text-gray-500">Type:</b> <span class="capitalize">${a.format?.toLowerCase() || 'N/A'}</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        content.innerHTML = detailsHTML;
+    } catch (e) {
+        content.innerHTML = '<p class="text-red-500 p-5">Failed to load details.</p>';
+        console.error(e);
+    }
+}
+
+function toggleMyListItem(button, id) {
+    if (MyList.contains(id)) {
+        MyList.remove(id);
+        button.innerHTML = '+';
+        button.title = "Add to My List";
+    } else {
+        MyList.add(id);
+        button.innerHTML = '✓';
+        button.title = "Remove from My List";
+    }
+    
+    // Update watchlist indicators on cards
+    document.querySelectorAll('.card').forEach(card => {
+        const img = card.querySelector('img');
+        const watchlistIndicator = card.querySelector('.watchlist-indicator');
+        if (img && watchlistIndicator) {
+            const animeTitle = button.closest('.modal-content-wrapper').querySelector('h2');
+            if (animeTitle && img.alt.includes(animeTitle.textContent)) {
+                if (MyList.contains(id)) {
+                    watchlistIndicator.classList.remove('hidden');
+                } else {
+                    watchlistIndicator.classList.add('hidden');
+                }
+            }
+        }
+    });
+}
+
+function closeDetail() {
+    const modal = document.getElementById('detailModal');
+    const content = document.getElementById('modalContent');
+    content.innerHTML = "";
+    modal.classList.remove('active');
+    document.body.classList.remove('modal-open');
+}
+
+// --- INITIALIZATION & EVENT LISTENERS ---
+document.addEventListener('DOMContentLoaded', () => {
+    MyList.init();
+    ViewSettings.init();
+    setupFilters(); 
+    buildHeroSection();
+    buildRows();
+
+    searchBtn.addEventListener("click", handleNewSearch);
+    exploreBtn.addEventListener("click", showExplore);
+    watchlistBtn.addEventListener("click", showWatchlist);
+    searchInput.addEventListener("keydown", e => { 
+        if (e.key === "Enter") { 
+            e.preventDefault(); 
+            handleNewSearch(); 
+        } 
+    });
+    prevPageBtn.addEventListener("click", () => { 
+        if (currentPage > 1) { 
+            currentPage--; 
+            fetchAndDisplayResults(); 
+        } 
+    });
+    nextPageBtn.addEventListener("click", () => { 
+        if (hasNextPage) { 
+            currentPage++; 
+            fetchAndDisplayResults(); 
+        } 
+    });
+    document.getElementById("detailModal").addEventListener("click", e => { 
+        if (e.target === e.currentTarget) closeDetail(); 
+    });
+    window.addEventListener('keydown', e => { 
+        if (e.key === 'Escape' && document.getElementById('detailModal').classList.contains('active')) closeDetail(); 
+    });
+    
+    // Hero carousel controls
+    document.getElementById("heroPrev").addEventListener("click", () => {
+        currentHeroIndex = (currentHeroIndex - 1 + heroSlidesData.length) % heroSlidesData.length;
+        showSlide(currentHeroIndex, true);
+    });
+    document.getElementById("heroNext").addEventListener("click", () => {
+        currentHeroIndex = (currentHeroIndex + 1) % heroSlidesData.length;
+        showSlide(currentHeroIndex, true);
+    });
+});
+
+// --- HELPER FUNCTIONS ---
+function createAnimeCard(anime) {
+    const cardClone = cardTemplate.content.cloneNode(true);
+    const card = cardClone.querySelector(".card");
+    card.onclick = () => openDetail(anime.id);
+    card.onkeydown = e => { if (e.key === "Enter") openDetail(anime.id) };
+    const img = card.querySelector("img");
+    img.src = anime.coverImage.extraLarge;
+    img.alt = anime.title.english || anime.title.romaji;
+    
+    // Add watchlist indicator if in list
+    if (MyList.contains(anime.id)) {
+        card.querySelector(".watchlist-indicator").classList.remove("hidden");
+    }
+    
+    return cardClone;
+}
+
+async function buildRows() {
+    for (const rowConfig of ROWS_CONFIG) {
+        const rowElement = document.createElement("div");
+        rowElement.className = "relative row-container";
+        rowElement.innerHTML = `
+            <h2 class="text-xl font-semibold mb-3">${rowConfig.title}</h2>
+            <div class="card-container pb-4 -mb-4">
+                <div class="spinner mx-4"></div>
+            </div>
+            <button class="scroll-arrow absolute top-1/2 -translate-y-1/2 left-0 z-20 h-2/3 w-12 flex items-center justify-center text-4xl left">&lt;</button>
+            <button class="scroll-arrow absolute top-1/2 -translate-y-1/2 right-0 z-20 h-2/3 w-12 flex items-center justify-center text-4xl right">&gt;</button>
+        `;
+        rowsContainer.appendChild(rowElement);
+        
+        // Add scroll functionality
+        const cardContainer = rowElement.querySelector(".card-container");
+        const leftArrow = rowElement.querySelector(".scroll-arrow.left");
+        const rightArrow = rowElement.querySelector(".scroll-arrow.right");
+        
+        leftArrow.addEventListener("click", () => {
+            cardContainer.scrollBy({ left: -cardContainer.clientWidth * 0.8, behavior: 'smooth' });
+        });
+        
+        rightArrow.addEventListener("click", () => {
+            cardContainer.scrollBy({ left: cardContainer.clientWidth * 0.8, behavior: 'smooth' });
+        });
+        
+        try {
+            const res = await fetch(ANILIST_URL, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ query: queries.row, variables: { sort: [rowConfig.sort] } }) 
+            });
+            const json = await res.json();
+            const media = json?.data?.Page?.media || [];
+            cardContainer.innerHTML = "";
+            media.forEach(anime => cardContainer.appendChild(createAnimeCard(anime)));
+        } catch (e) { 
+            rowElement.querySelector(".card-container").innerHTML = '<p class="text-gray-400 p-4">Could not load this row.</p>'; 
+        }
+    }
+}
+
+async function buildHeroSection() {
+    const heroSlidesContainer = document.getElementById('heroSlidesContainer');
+    const heroDotsContainer = document.getElementById('heroDotsContainer');
+    
+    try {
+        const res = await fetch(ANILIST_URL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ query: queries.hero }) 
+        });
+        const json = await res.json();
+        heroSlidesData = json?.data?.Page?.media.filter(m => m.bannerImage) || [];
+        
+        if (heroSlidesData.length === 0) { 
+            heroSection.style.display = 'none'; 
+            return; 
+        }
+        
+        let slidesHTML = '', dotsHTML = '';
+        heroSlidesData.forEach((anime, index) => {
+            slidesHTML += `
+                <div class="hero-slide ${index === 0 ? 'active' : ''}">
+                    <img src="${anime.bannerImage}" class="w-full h-full object-cover" alt="${anime.title.english || anime.title.romaji}" />
+                    <div class="hero-gradient absolute inset-0"></div>
+                    <div class="absolute top-1/2 -translate-y-1/2 left-4 sm:left-10 md:left-16 max-w-md xl:max-w-lg text-white">
+                        <h2 class="text-3xl md:text-5xl font-bold mt-3">${anime.title.english || anime.title.romaji}</h2>
+                        <p class="mt-4 text-sm md:text-base hidden sm:block">${(anime.description || '').replace(/<br>|<i>|<\/i>/g, ' ').substring(0, 150)}...</p>
+                        <div class="mt-6 flex items-center gap-3">
+                            <button onclick="openDetail(${anime.id})" class="px-5 py-2 text-white font-semibold rounded bg-gray-500/70">More Info</button>
+                        </div>
+                    </div>
+                </div>`;
+            dotsHTML += `<button onclick="showSlide(${index}, true)" class="${index === 0 ? 'active' : ''}"></button>`;
+        });
+        heroSlidesContainer.innerHTML = slidesHTML;
+        heroDotsContainer.innerHTML = dotsHTML;
+        
+        // Start the carousel
+        startHeroCarousel();
+    } catch(e) { 
+        console.error("Failed to build hero section:", e); 
+    }
+}
+
+function startHeroCarousel() {
+    clearInterval(heroInterval);
+    heroInterval = setInterval(() => {
+        currentHeroIndex = (currentHeroIndex + 1) % heroSlidesData.length;
+        showSlide(currentHeroIndex);
+    }, 6000);
+}
+
+function setupFilters() {
+    // Sort options are already set in HTML
+    
+    // Type filter options are already set in HTML
+    
+    const seasons = ['WINTER', 'SPRING', 'SUMMER', 'FALL'];
+    seasons.forEach(s => { 
+        seasonFilter.innerHTML += `<option value="${s}">${s.charAt(0) + s.slice(1).toLowerCase()}</option>`; 
+    });
+    
+    const currentYear = new Date().getFullYear();
+    for (let i = 0; i < 30; i++) { 
+        yearFilter.innerHTML += `<option value="${currentYear - i}">${currentYear - i}</option>`; 
+    }
+    
+    GENRES.sort().forEach(g => { 
+        genreFilter.innerHTML += `<option value="${g}">${g}</option>`; 
+    });
+}
+
+function showSlide(index, manual = false) {
+    if (manual) {
+        clearInterval(heroInterval);
+        startHeroCarousel();
+    }
+    
+    document.querySelectorAll('.hero-slide').forEach((s, i) => s.classList.toggle('active', i === index));
+    document.querySelectorAll('.hero-dots button').forEach((d, i) => d.classList.toggle('active', i === index));
+    currentHeroIndex = index;
+}
+</script>
+</body>
+</html>
